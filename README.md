@@ -20,6 +20,20 @@ everything is saved to your browser's `localStorage`.
 - **Dashboard** — workouts this week, most-logged exercises, and recent
   activity at a glance.
 - **Backup** — export all data as JSON or CSV, and re-import a JSON backup.
+- **Installable (PWA)** — add it to your phone's home screen for an
+  app-like icon and offline use; there's still no account or sync, so data
+  stays on whichever device/browser it's installed on.
+
+## Access it on your phone
+
+This repo auto-deploys to GitHub Pages via `.github/workflows/deploy.yml`
+on every push to `main`. One-time setup: in the repo's **Settings → Pages**,
+set **Source** to "GitHub Actions" — after that, pushes publish
+automatically to `https://<owner>.github.io/<repo>/`.
+
+Once it's live, open that URL on your phone and use "Add to Home Screen"
+(iOS Safari) or "Install app" (Android Chrome) to get an app icon that
+launches full-screen and keeps working offline.
 
 ## Getting started
 
