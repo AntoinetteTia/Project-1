@@ -1,0 +1,2313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Winter Arc</title>
+<meta name="description" content="A local-only habit tracker for a winter self-improvement arc: countdown, daily checklist, streaks, stats, journal, and reminders, all stored in your browser.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #eef3f8;
+  --surface: #ffffff;
+  --surface-2: #e2ebf2;
+  --surface-3: #d6e2ea;
+  --border: #cddae4;
+  --ink: #16232e;
+  --ink-muted: #5e7182;
+  --ink-faint: #8a99a6;
+  --accent: #ea6f2f;
+  --accent-ink: #ffffff;
+  --accent-soft: #fbe3d2;
+  --good: #2e8f81;
+  --good-soft: #d8ece8;
+  --critical: #c14f5e;
+  --critical-soft: #f6dde1;
+  --shadow: 220 45% 20%;
+  --focus: #2e6fa8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0a121c;
+    --surface: #111c29;
+    --surface-2: #18253470;
+    --surface-3: #223243;
+    --border: #24384a;
+    --ink: #e9f0f6;
+    --ink-muted: #93a7b8;
+    --ink-faint: #63788a;
+    --accent: #ff9558;
+    --accent-ink: #16151b;
+    --accent-soft: #3a2718;
+    --good: #56c2b0;
+    --good-soft: #123330;
+    --critical: #e88a96;
+    --critical-soft: #3a1e24;
+    --focus: #7fb6e8;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0a121c;
+  --surface: #111c29;
+  --surface-2: #18253470;
+  --surface-3: #223243;
+  --border: #24384a;
+  --ink: #e9f0f6;
+  --ink-muted: #93a7b8;
+  --ink-faint: #63788a;
+  --accent: #ff9558;
+  --accent-ink: #16151b;
+  --accent-soft: #3a2718;
+  --good: #56c2b0;
+  --good-soft: #123330;
+  --critical: #e88a96;
+  --critical-soft: #3a1e24;
+  --focus: #7fb6e8;
+}
+
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+h1, h2, h3, .display {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+a { color: inherit; }
+
+button {
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* ---------- layout shell ---------- */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.rail {
+  width: 216px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px;
+}
+
+.rail-mark {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.rail-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.rail-brand-text strong {
+  font-family: "Fraunces", serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.rail-brand-text span {
+  font-size: 11px;
+  color: var(--ink-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rail-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-item:hover { background: var(--surface-2); color: var(--ink); }
+
+.nav-item[data-active="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.rail-foot {
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--ink-faint);
+  padding: 0 6px;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 40px 32px 120px;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .rail { display: none; }
+  .main { padding: 24px 18px 96px; }
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    justify-content: space-around;
+    z-index: 40;
+  }
+  .bottom-nav button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    padding: 4px 10px;
+    border-radius: 10px;
+  }
+  .bottom-nav button[data-active="true"] { color: var(--accent); }
+  .bottom-nav svg { width: 20px; height: 20px; }
+}
+
+/* ---------- generic bits ---------- */
+
+.stack { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; }
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { filter: brightness(1.06); }
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--ink);
+}
+.btn-ghost:hover { background: var(--surface-2); }
+
+.btn-quiet {
+  background: var(--surface-2);
+  color: var(--ink-muted);
+}
+.btn-quiet:hover { color: var(--ink); }
+
+.btn-danger {
+  background: transparent;
+  border-color: var(--critical-soft);
+  color: var(--critical);
+}
+.btn-danger:hover { background: var(--critical-soft); }
+
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.btn-sm { padding: 7px 12px; font-size: 12.5px; border-radius: 8px; }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+.field input[type="text"],
+.field input[type="date"],
+.field input[type="time"],
+.field input[type="number"],
+.field textarea,
+.field select {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  width: 100%;
+}
+.field textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+.field-hint { font-size: 11.5px; color: var(--ink-faint); }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.pill-good { background: var(--good-soft); color: var(--good); }
+.pill-accent { background: var(--accent-soft); color: var(--accent); }
+.pill-muted { background: var(--surface-2); color: var(--ink-muted); }
+
+.divider { height: 1px; background: var(--border); border: none; margin: 0; }
+
+/* ---------- today view ---------- */
+
+.hero {
+  padding: 28px 24px 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.hero-phase { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
+
+.arc-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.arc-figure { width: 100%; max-width: 420px; height: auto; }
+
+.arc-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: -34px;
+}
+
+.arc-days {
+  font-size: 52px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.arc-label {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.arc-progress-label {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  margin-top: 10px;
+}
+
+.quote-card {
+  padding: 20px 22px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.quote-mark {
+  font-family: "Fraunces", serif;
+  font-size: 34px;
+  color: var(--accent);
+  line-height: 0.6;
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+.quote-text {
+  font-family: "Fraunces", serif;
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 34px 0 12px;
+}
+.section-head h2 { font-size: 18px; }
+.section-count { font-size: 12.5px; color: var(--ink-muted); }
+
+.habit-list { display: flex; flex-direction: column; gap: 8px; }
+
+.habit-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 14px;
+  border-radius: 13px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.habit-row[data-done="true"] {
+  border-color: var(--good);
+  background: var(--good-soft);
+}
+
+.habit-check {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.habit-check svg { width: 15px; height: 15px; opacity: 0; transition: opacity 0.1s ease; }
+.habit-row[data-done="true"] .habit-check {
+  background: var(--good);
+  border-color: var(--good);
+}
+.habit-row[data-done="true"] .habit-check svg { opacity: 1; stroke: white; }
+
+.habit-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.habit-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.habit-name { font-size: 14.5px; font-weight: 600; }
+.habit-meta { font-size: 12px; color: var(--ink-muted); }
+
+.streak-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.streak-badge svg { width: 14px; height: 14px; }
+.streak-badge[data-zero="true"] { color: var(--ink-faint); }
+
+.empty-note {
+  padding: 22px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+}
+
+/* ---------- quick log ---------- */
+
+.quicklog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (min-width: 560px) {
+  .quicklog-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.ql-tile {
+  padding: 13px 12px;
+  border-radius: 13px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ql-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ql-tile-head svg { width: 13px; height: 13px; }
+.ql-tile input[type="number"] {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 700;
+  width: 100%;
+}
+.ql-tile input[type="number"]::placeholder { color: var(--ink-faint); font-weight: 600; }
+.ql-unit { font-size: 11px; color: var(--ink-faint); }
+
+.workout-toggle { display: flex; gap: 6px; }
+.workout-toggle button {
+  flex: 1;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 5px 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+.workout-toggle button[data-on="true"] {
+  background: var(--good);
+  border-color: var(--good);
+  color: white;
+}
+.ql-type-input {
+  border: none;
+  border-top: 1px dashed var(--border);
+  background: transparent;
+  padding: 6px 0 0;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* ---------- stats ---------- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (min-width: 560px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.stat-tile {
+  padding: 16px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-value { font-size: 27px; font-weight: 600; }
+.stat-label { font-size: 11.5px; color: var(--ink-muted); font-weight: 600; }
+
+.chart-card { padding: 20px 20px 14px; }
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.chart-scroll { overflow-x: auto; }
+.chart-svg { display: block; }
+
+.habit-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+}
+.habit-stat-bar-wrap {
+  flex: 1;
+  height: 7px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.habit-stat-bar { height: 100%; background: var(--accent); border-radius: 99px; }
+.habit-stat-pct { width: 42px; text-align: right; font-size: 12.5px; font-weight: 700; }
+.habit-stat-name { width: 128px; flex-shrink: 0; font-size: 13px; font-weight: 600; display: flex; align-items:center; gap:8px; }
+.habit-stat-best { font-size: 11.5px; color: var(--ink-muted); width: 68px; text-align: right; flex-shrink: 0; }
+
+/* ---------- journal ---------- */
+
+.composer { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.composer-head { display: flex; justify-content: space-between; align-items: center; }
+.composer textarea { min-height: 110px; }
+.composer-tools { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.photo-input-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  padding: 7px 11px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+}
+.photo-input-label:hover { color: var(--ink); border-color: var(--ink-faint); }
+.photo-input-label svg { width: 14px; height: 14px; }
+.photo-preview-strip { display: flex; gap: 8px; align-items: center; }
+.photo-thumb {
+  width: 46px; height: 46px; border-radius: 8px; object-fit: cover;
+  border: 1px solid var(--border);
+}
+.photo-remove {
+  font-size: 11px; color: var(--critical); background: none; border: none; font-weight: 700;
+}
+
+.journal-search {
+  margin: 30px 0 14px;
+}
+.journal-search input {
+  width: 100%;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+}
+
+.entry-list { display: flex; flex-direction: column; gap: 10px; }
+.entry-card { padding: 15px 17px; display: flex; flex-direction: column; gap: 8px; }
+.entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.entry-date { font-size: 13px; font-weight: 700; }
+.entry-completion { font-size: 11.5px; color: var(--ink-muted); }
+.entry-text { font-size: 13.5px; line-height: 1.55; color: var(--ink); white-space: pre-wrap; }
+.entry-photos { display: flex; gap: 8px; flex-wrap: wrap; }
+.entry-photo { width: 72px; height: 72px; border-radius: 9px; object-fit: cover; border: 1px solid var(--border); }
+
+/* ---------- settings ---------- */
+
+.settings-section { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.settings-section + .settings-section { margin-top: 14px; }
+.settings-section h3 { font-size: 15px; }
+.settings-section p.desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.5; margin: -8px 0 0; }
+
+.habit-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+}
+.habit-editor-icon-btn {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.habit-editor-row input[type="text"] { flex: 1; }
+.icon-picker {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.icon-picker button {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--surface);
+  font-size: 15px;
+}
+.icon-picker button[data-picked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+
+.ics-box {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 140px;
+  overflow-y: auto;
+  color: var(--ink-muted);
+}
+
+.toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--ground);
+  padding: 10px 18px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px hsl(var(--shadow) / 0.25);
+  z-index: 80;
+  animation: toast-in 0.2s ease;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ---------- onboarding ---------- */
+
+.onboard-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 18px;
+}
+.onboard-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 30px 28px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.onboard-steps {
+  display: flex;
+  gap: 6px;
+}
+.onboard-step-dot {
+  flex: 1;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--surface-2);
+}
+.onboard-step-dot[data-active="true"] { background: var(--accent); }
+.onboard-title { font-size: 22px; }
+.onboard-sub { font-size: 13.5px; color: var(--ink-muted); line-height: 1.5; margin-top: -8px; }
+.onboard-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.date-range-row { display: flex; gap: 10px; }
+.date-range-row .field { flex: 1; }
+.range-preview {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 8px 11px;
+}
+.onboard-habit-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; padding-right: 2px; }
+.add-habit-row { display: flex; gap: 8px; }
+.add-habit-row input { flex: 1; }
+.remove-habit-btn {
+  background: none; border: none; color: var(--ink-faint); font-size: 16px; flex-shrink: 0;
+}
+.remove-habit-btn:hover { color: var(--critical); }
+
+/* scrollbars, subtle */
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback, Fragment } = React;
+
+/* ============================== constants ============================== */
+
+const STORAGE_KEY = "winterArcData_v1";
+
+const QUOTES = [
+  "The cold doesn't ask permission. Neither do you.",
+  "Nobody claps for the version of you that shows up in January. Show up anyway.",
+  "Discipline is just a promise you keep when the season makes it easy to break it.",
+  "Spring rewards the people who didn't disappear in winter.",
+  "You don't need motivation. You need a streak you refuse to lose.",
+  "Small and cold beats big and warm-weather-only.",
+  "The days are short. Make the effort long.",
+  "Every checked box is a vote for who you're becoming.",
+  "It's not about the habit today. It's about the person it's building.",
+  "The version of you on the other side of this arc is watching.",
+  "Comfort is the enemy of the arc. Choose the harder five minutes.",
+  "You are not behind. You are mid-arc.",
+  "Consistency is boring on purpose. That's why it works.",
+  "One dark morning at a time. That's the whole method.",
+  "The streak doesn't care how you feel about Tuesday.",
+  "Nobody is coming to do this for you. Good — you didn't need them to.",
+  "Let the cold outside make the fire inside non-negotiable.",
+  "You're not chasing perfect. You're chasing the next checkbox.",
+  "Winters like this one are where reputations with yourself are built.",
+  "The arc doesn't pause for bad moods. Neither should you.",
+  "Do it small, do it ugly, do it today.",
+  "The days you don't feel like it are the ones that count double.",
+  "You've survived every hard day so far. This one's no different.",
+  "Momentum is just yesterday's discipline showing up uninvited today.",
+  "This isn't about the weather. It's about who's still here in March.",
+  "Long nights are just extra time to get ahead.",
+  "A habit missed once is a slip. A habit missed twice is a new habit. Don't let it become one.",
+  "You don't have to want to. You just have to already be doing it.",
+  "Nobody sees the 6am habit. Everybody sees the person it made.",
+  "The arc rewards the boring, repeated choice over the dramatic one-time effort.",
+  "Cold hands, warm resolve.",
+  "You're building proof, one ordinary day at a time.",
+  "The hardest part is opening this app. You already did that.",
+  "Progress hides inside repetition, not intensity.",
+  "Let today be unremarkable and completed.",
+  "Whatever excuse showed up today, it showed up yesterday too. You still did it.",
+  "This is the quiet season. Use it.",
+  "The you at the end of the arc was built by the you who didn't skip today.",
+  "Keep the fire lit. That's the whole job description.",
+  "Some days the win is just not breaking the chain.",
+  "You don't rise to your goals. You fall to your habits — so make them good ones.",
+  "The dark months end. What you built in them doesn't have to.",
+  "Nobody is grading this but future you. Don't let them down.",
+  "It's not too late in the day to still make it a good one.",
+  "Show up cold. Leave warmed up.",
+];
+
+const ICON_CHOICES = [
+  "💧","🏃","🧘","📖","❄️","🔥","🛌","🥗",
+  "✍️","🎯","🌅","🕯️","🧠","💪","🚿","🥶",
+  "⛄","🌙","☀️","🧣","🚫","📵","🧊","🩹",
+];
+
+/* =============================== date utils ============================= */
+
+const pad2 = (n) => String(n).padStart(2, "0");
+
+function toKey(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function fromKey(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+function todayKey() {
+  return toKey(new Date());
+}
+function addDaysKey(key, n) {
+  const d = fromKey(key);
+  d.setDate(d.getDate() + n);
+  return toKey(d);
+}
+function diffDaysKey(aKey, bKey) {
+  return Math.round((fromKey(aKey) - fromKey(bKey)) / 86400000);
+}
+function clamp(n, lo, hi) {
+  return Math.min(hi, Math.max(lo, n));
+}
+function dayOfYear(key) {
+  const d = fromKey(key);
+  const start = new Date(d.getFullYear(), 0, 0);
+  return Math.floor((d - start) / 86400000);
+}
+function formatLong(key) {
+  return fromKey(key).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+function formatShort(key) {
+  return fromKey(key).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+function formatMonthDayYear(key) {
+  return fromKey(key).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+/* =============================== storage ================================ */
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveState(state) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e };
+  }
+}
+
+function freshState() {
+  return {
+    version: 1,
+    onboarded: false,
+    arc: { startDate: null, endDate: null, why: "" },
+    habits: [],
+    days: {},
+    reminder: { time: "20:00", enabled: false, lastNotifiedDate: null },
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
+
+/* ============================== habit logic ============================= */
+
+function isHabitDone(days, dateKey, habitId) {
+  const d = days[dateKey];
+  return !!(d && d.habits && d.habits[habitId]);
+}
+
+function currentStreak(days, habitId, addedDate, todayK) {
+  let cursor = todayK;
+  if (!isHabitDone(days, cursor, habitId)) {
+    cursor = addDaysKey(cursor, -1);
+  }
+  let streak = 0;
+  while (cursor >= addedDate && isHabitDone(days, cursor, habitId)) {
+    streak++;
+    cursor = addDaysKey(cursor, -1);
+  }
+  return streak;
+}
+
+function computeHabitStats(days, habits, todayK) {
+  return habits.map((h) => {
+    const added = h.addedDate <= todayK ? h.addedDate : todayK;
+    if (todayK < h.addedDate) {
+      return { ...h, done: 0, total: 0, pct: 0, current: 0, longest: 0 };
+    }
+    const total = diffDaysKey(todayK, added) + 1;
+    let done = 0,
+      run = 0,
+      best = 0;
+    let cursor = added;
+    while (cursor <= todayK) {
+      if (isHabitDone(days, cursor, h.id)) {
+        done++;
+        run++;
+        if (run > best) best = run;
+      } else {
+        run = 0;
+      }
+      cursor = addDaysKey(cursor, 1);
+    }
+    const current = currentStreak(days, h.id, h.addedDate, todayK);
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    return { ...h, done, total, pct, current, longest: best };
+  });
+}
+
+function dailySeries(days, habits, startKey, endKey) {
+  const out = [];
+  if (!startKey || !endKey || startKey > endKey) return out;
+  let cursor = startKey;
+  let guard = 0;
+  while (cursor <= endKey && guard < 3660) {
+    const active = habits.filter((h) => h.addedDate <= cursor);
+    let done = 0;
+    active.forEach((h) => {
+      if (isHabitDone(days, cursor, h.id)) done++;
+    });
+    out.push({
+      date: cursor,
+      pct: active.length ? Math.round((done / active.length) * 100) : null,
+    });
+    cursor = addDaysKey(cursor, 1);
+    guard++;
+  }
+  return out;
+}
+
+function arcPhase(start, end, today) {
+  if (!start || !end) return "unset";
+  if (today < start) return "upcoming";
+  if (today > end) return "complete";
+  return "active";
+}
+
+/* ================================ ICS ==================================== */
+
+function buildICSWithTime(arc, time) {
+  const [hh, mm] = time.split(":");
+  const start = arc.startDate || todayKey();
+  const end = arc.endDate || addDaysKey(start, 90);
+  const dtStart = `${start.replace(/-/g, "")}T${hh}${mm}00`;
+  const until = `${end.replace(/-/g, "")}T235900`;
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const uidStr = `winterarc-${start}-${time.replace(":", "")}@local`;
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Winter Arc Tracker//EN",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${uidStr}`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART:${dtStart}`,
+    "DURATION:PT15M",
+    `RRULE:FREQ=DAILY;UNTIL=${until}`,
+    "SUMMARY:Winter Arc check-in",
+    "DESCRIPTION:Complete today's habits before the day ends.",
+    "BEGIN:VALARM",
+    "ACTION:DISPLAY",
+    "DESCRIPTION:Winter Arc check-in",
+    "TRIGGER:PT0M",
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+/* ============================= image resize =============================== */
+
+function resizeImageFile(file, maxDim = 640, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("image_decode_failed"));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ================================ icons ================================== */
+
+function Icon({ name, size = 18 }) {
+  const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (name) {
+    case "today":
+      return (
+        <svg {...p}>
+          <line x1="3" y1="17" x2="21" y2="17" />
+          <path d="M6 17a6 6 0 0 1 12 0" />
+          <circle cx="12" cy="9" r="1.6" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "stats":
+      return (
+        <svg {...p}>
+          <line x1="3" y1="20" x2="21" y2="20" />
+          <rect x="6" y="12" width="3" height="8" />
+          <rect x="11" y="7" width="3" height="13" />
+          <rect x="16" y="15" width="3" height="5" />
+        </svg>
+      );
+    case "journal":
+      return (
+        <svg {...p}>
+          <path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Z" />
+          <line x1="9" y1="8" x2="14" y2="8" />
+          <line x1="9" y1="12" x2="14" y2="12" />
+        </svg>
+      );
+    case "settings":
+      return (
+        <svg {...p}>
+          <circle cx="12" cy="12" r="3" />
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+            <line key={a} x1="12" y1="4.5" x2="12" y2="7" transform={`rotate(${a} 12 12)`} />
+          ))}
+        </svg>
+      );
+    case "check":
+      return (
+        <svg {...p}>
+          <polyline points="4 12.5 9.5 18 20 6" />
+        </svg>
+      );
+    case "flame":
+      return (
+        <svg {...p}>
+          <path d="M12 2c1 3-3 4-3 8a3 3 0 0 0 6 0c0-1.5-1-2-1-3.5 2 1 3 3.5 3 6a5.5 5.5 0 0 1-11 0C6 8 9 6 12 2Z" />
+        </svg>
+      );
+    case "footprints":
+      return (
+        <svg {...p}>
+          <ellipse cx="8" cy="8" rx="2.4" ry="3.4" />
+          <ellipse cx="16" cy="16" rx="2.4" ry="3.4" />
+          <line x1="8" y1="12" x2="8" y2="12" />
+        </svg>
+      );
+    case "droplet":
+      return (
+        <svg {...p}>
+          <path d="M12 3c3.5 4.5 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 2.5-6.5 6-11Z" />
+        </svg>
+      );
+    case "moon":
+      return (
+        <svg {...p}>
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />
+        </svg>
+      );
+    case "dumbbell":
+      return (
+        <svg {...p}>
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="9" x2="4" y2="15" />
+          <line x1="20" y1="9" x2="20" y2="15" />
+          <line x1="8" y1="7" x2="8" y2="17" />
+          <line x1="16" y1="7" x2="16" y2="17" />
+        </svg>
+      );
+    case "camera":
+      return (
+        <svg {...p}>
+          <path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+          <circle cx="12" cy="13.5" r="3.4" />
+        </svg>
+      );
+    case "plus":
+      return (
+        <svg {...p}>
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      );
+    case "x":
+      return (
+        <svg {...p}>
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+        </svg>
+      );
+    case "chevron":
+      return (
+        <svg {...p}>
+          <polyline points="9 6 15 12 9 18" />
+        </svg>
+      );
+    case "download":
+      return (
+        <svg {...p}>
+          <path d="M12 4v11" />
+          <polyline points="7 11 12 16 17 11" />
+          <line x1="5" y1="20" x2="19" y2="20" />
+        </svg>
+      );
+    case "bell":
+      return (
+        <svg {...p}>
+          <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" />
+          <path d="M10 18a2 2 0 0 0 4 0" />
+        </svg>
+      );
+    case "trash":
+      return (
+        <svg {...p}>
+          <line x1="5" y1="7" x2="19" y2="7" />
+          <path d="M8 7V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+          <path d="M7 7l1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" />
+        </svg>
+      );
+    case "copy":
+      return (
+        <svg {...p}>
+          <rect x="9" y="9" width="11" height="11" rx="1.5" />
+          <path d="M5 15V5a1 1 0 0 1 1-1h10" />
+        </svg>
+      );
+    case "search":
+      return (
+        <svg {...p}>
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <line x1="20" y1="20" x2="15.5" y2="15.5" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+/* =============================== toasts ==================================== */
+
+function useToasts() {
+  const [toasts, setToasts] = useState([]);
+  const push = useCallback((msg) => {
+    const id = uid();
+    setToasts((t) => [...t, { id, msg }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
+  }, []);
+  return [toasts, push];
+}
+
+/* =============================== downloads capability ======================= */
+
+function useDownloads() {
+  const ref = useRef(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    if (typeof window !== "undefined" && window.claude && typeof window.claude.use === "function") {
+      window.claude
+        .use("downloads")
+        .then((ns) => {
+          if (!cancelled) {
+            ref.current = ns;
+            setReady(!!ns);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setReady(false);
+        });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const save = useCallback(async (filename, data) => {
+    if (!ref.current) return { ok: false, code: "unavailable" };
+    try {
+      await ref.current.save({ filename, data });
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, code: (e && e.code) || "unavailable" };
+    }
+  }, []);
+  return { ready, save };
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).then(
+      () => true,
+      () => fallbackCopy(text)
+    );
+  }
+  return Promise.resolve(fallbackCopy(text));
+}
+function fallbackCopy(text) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* =============================== root app ==================================== */
+
+function App() {
+  const [state, setState] = useState(() => loadState() || freshState());
+  const [view, setView] = useState("today");
+  const [toasts, pushToast] = useToasts();
+  const downloads = useDownloads();
+  const saveTimer = useRef(null);
+
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const res = saveState(state);
+      if (!res.ok) {
+        pushToast("Storage is full — try removing a journal photo.");
+      }
+    }, 180);
+    return () => clearTimeout(saveTimer.current);
+  }, [state]);
+
+  useEffect(() => {
+    document.title = state.onboarded ? "Winter Arc" : "Winter Arc — Set up";
+  }, [state.onboarded]);
+
+  const today = todayKey();
+
+  const habitStats = useMemo(() => computeHabitStats(state.days, state.habits, today), [state.days, state.habits, today]);
+
+  const updateArc = (patch) => setState((s) => ({ ...s, arc: { ...s.arc, ...patch } }));
+  const finishOnboarding = (arc, habits) => {
+    setState((s) => ({
+      ...s,
+      arc,
+      habits: habits.map((h) => ({ ...h, addedDate: arc.startDate < today ? arc.startDate : today })),
+      onboarded: true,
+    }));
+  };
+
+  const toggleHabit = (habitId, dateKey) => {
+    setState((s) => {
+      const day = s.days[dateKey] || { habits: {}, journal: { text: "", photos: [] }, quick: {} };
+      const nowOn = !(day.habits && day.habits[habitId]);
+      const newDay = { ...day, habits: { ...day.habits, [habitId]: nowOn } };
+      return { ...s, days: { ...s.days, [dateKey]: newDay } };
+    });
+  };
+
+  const addHabit = (name, icon) => {
+    if (!name.trim()) return;
+    setState((s) => ({
+      ...s,
+      habits: [...s.habits, { id: uid(), name: name.trim(), icon: icon || null, addedDate: today }],
+    }));
+  };
+  const removeHabit = (habitId) => {
+    setState((s) => ({ ...s, habits: s.habits.filter((h) => h.id !== habitId) }));
+  };
+  const renameHabit = (habitId, name, icon) => {
+    setState((s) => ({
+      ...s,
+      habits: s.habits.map((h) => (h.id === habitId ? { ...h, name, icon } : h)),
+    }));
+  };
+
+  const getDay = (dateKey) => state.days[dateKey] || { habits: {}, journal: { text: "", photos: [] }, quick: {} };
+
+  const updateJournal = (dateKey, patch) => {
+    setState((s) => {
+      const day = getDay(dateKey);
+      return {
+        ...s,
+        days: { ...s.days, [dateKey]: { ...day, journal: { ...day.journal, ...patch } } },
+      };
+    });
+  };
+  const updateQuick = (dateKey, patch) => {
+    setState((s) => {
+      const day = getDay(dateKey);
+      return {
+        ...s,
+        days: { ...s.days, [dateKey]: { ...day, quick: { ...day.quick, ...patch } } },
+      };
+    });
+  };
+
+  const updateReminder = (patch) => setState((s) => ({ ...s, reminder: { ...s.reminder, ...patch } }));
+
+  const resetArc = () => {
+    setState((s) => ({ ...freshState() }));
+    setView("today");
+  };
+
+  const exportJSON = async () => {
+    const data = JSON.stringify(state, null, 2);
+    const res = await downloads.save(`winter-arc-backup-${today}.json`, data);
+    if (res.ok) pushToast("Backup saved.");
+    else if (res.code === "declined") pushToast("Export cancelled.");
+    else {
+      copyToClipboard(data);
+      pushToast("Couldn't trigger a download here — copied JSON to clipboard instead.");
+    }
+  };
+
+  if (!state.onboarded) {
+    return (
+      <>
+        <Onboarding onComplete={finishOnboarding} />
+        <ToastLayer toasts={toasts} />
+      </>
+    );
+  }
+
+  return (
+    <div className="app-shell">
+      <Rail view={view} setView={setView} />
+      <main className="main">
+        {view === "today" && (
+          <TodayView
+            state={state}
+            today={today}
+            habitStats={habitStats}
+            onToggle={(id) => toggleHabit(id, today)}
+            onQuick={(patch) => updateQuick(today, patch)}
+            goToJournal={() => setView("journal")}
+          />
+        )}
+        {view === "stats" && <StatsView state={state} today={today} habitStats={habitStats} />}
+        {view === "journal" && <JournalView state={state} today={today} habitStats={habitStats} getDay={getDay} updateJournal={updateJournal} pushToast={pushToast} />}
+        {view === "settings" && (
+          <SettingsView
+            state={state}
+            today={today}
+            updateArc={updateArc}
+            addHabit={addHabit}
+            removeHabit={removeHabit}
+            renameHabit={renameHabit}
+            updateReminder={updateReminder}
+            resetArc={resetArc}
+            exportJSON={exportJSON}
+            downloads={downloads}
+            pushToast={pushToast}
+          />
+        )}
+      </main>
+      <BottomNav view={view} setView={setView} />
+      <ReminderWatcher state={state} today={today} habitStats={habitStats} updateReminder={updateReminder} />
+      <ToastLayer toasts={toasts} />
+    </div>
+  );
+}
+
+function ToastLayer({ toasts }) {
+  return (
+    <>
+      {toasts.map((t) => (
+        <div className="toast" key={t.id}>
+          {t.msg}
+        </div>
+      ))}
+    </>
+  );
+}
+
+/* =============================== nav ==================================== */
+
+const NAV_ITEMS = [
+  { key: "today", label: "Today", icon: "today" },
+  { key: "stats", label: "Stats", icon: "stats" },
+  { key: "journal", label: "Journal", icon: "journal" },
+  { key: "settings", label: "Settings", icon: "settings" },
+];
+
+function BrandMark({ size = 30 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" className="rail-mark">
+      <circle cx="16" cy="16" r="15" fill="none" style={{ stroke: "var(--border)" }} strokeWidth="1.4" />
+      <line x1="5" y1="21" x2="27" y2="21" style={{ stroke: "var(--ink-faint)" }} strokeWidth="1.3" />
+      <path d="M6 21a10 10 0 0 1 20 0" fill="none" style={{ stroke: "var(--accent)" }} strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="16" cy="11" r="2" style={{ fill: "var(--accent)" }} />
+    </svg>
+  );
+}
+
+function Rail({ view, setView }) {
+  return (
+    <nav className="rail">
+      <div className="rail-brand">
+        <BrandMark />
+        <div className="rail-brand-text">
+          <strong>Winter Arc</strong>
+          <span>Habit Tracker</span>
+        </div>
+      </div>
+      <div className="rail-nav">
+        {NAV_ITEMS.map((item) => (
+          <button key={item.key} className="nav-item" data-active={view === item.key} onClick={() => setView(item.key)}>
+            <Icon name={item.icon} size={17} />
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div className="rail-foot">Stored only on this device.</div>
+    </nav>
+  );
+}
+
+function BottomNav({ view, setView }) {
+  return (
+    <nav className="bottom-nav">
+      {NAV_ITEMS.map((item) => (
+        <button key={item.key} data-active={view === item.key} onClick={() => setView(item.key)}>
+          <Icon name={item.icon} size={19} />
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/* =============================== arc hero ==================================== */
+
+function ArcHero({ phase, progress, daysElapsed, daysRemaining, totalDays, untilStart }) {
+  const cx = 200,
+    cy = 158,
+    r = 148;
+  const p = clamp(progress, 0, 1);
+  const angleDeg = 180 - 180 * p;
+  const angleRad = (angleDeg * Math.PI) / 180;
+  const sunX = cx + r * Math.cos(angleRad);
+  const sunY = cy - r * Math.sin(angleRad);
+  const dashOffset = 100 - p * 100;
+  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+
+  return (
+    <div className="arc-wrap">
+      <svg viewBox="0 0 400 190" className="arc-figure" role="img" aria-label="Progress through the arc">
+        <line x1="26" y1={cy} x2="374" y2={cy} style={{ stroke: "var(--border)" }} strokeWidth="1.4" />
+        <path d={arcPath} fill="none" style={{ stroke: "var(--surface-2)" }} strokeWidth="7" strokeLinecap="round" pathLength="100" />
+        {phase === "active" && (
+          <path
+            d={arcPath}
+            fill="none"
+            style={{ stroke: "var(--accent)", transition: "stroke-dashoffset 0.7s ease" }}
+            strokeWidth="7"
+            strokeLinecap="round"
+            pathLength="100"
+            strokeDasharray="100"
+            strokeDashoffset={dashOffset}
+          />
+        )}
+        {phase === "complete" && <path d={arcPath} fill="none" style={{ stroke: "var(--good)" }} strokeWidth="7" strokeLinecap="round" pathLength="100" />}
+        {phase === "active" && <circle cx={sunX} cy={sunY} r="7.5" style={{ fill: "var(--accent)", stroke: "var(--surface)" }} strokeWidth="3" />}
+        {phase === "complete" && <circle cx={cx + r} cy={cy} r="7.5" style={{ fill: "var(--good)", stroke: "var(--surface)" }} strokeWidth="3" />}
+      </svg>
+      <div className="arc-readout">
+        {phase === "active" && (
+          <>
+            <span className="arc-days display mono">{daysRemaining}</span>
+            <span className="arc-label">day{daysRemaining === 1 ? "" : "s"} left</span>
+          </>
+        )}
+        {phase === "upcoming" && (
+          <>
+            <span className="arc-days display mono">{untilStart}</span>
+            <span className="arc-label">day{untilStart === 1 ? "" : "s"} until it begins</span>
+          </>
+        )}
+        {phase === "complete" && (
+          <>
+            <span className="arc-days display mono">{totalDays}</span>
+            <span className="arc-label">day arc complete</span>
+          </>
+        )}
+      </div>
+      {phase === "active" && (
+        <div className="arc-progress-label mono">
+          Day {daysElapsed} of {totalDays}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =============================== today view ==================================== */
+
+function TodayView({ state, today, habitStats, onToggle, onQuick, goToJournal }) {
+  const { arc } = state;
+  const phase = arcPhase(arc.startDate, arc.endDate, today);
+  const totalDays = arc.startDate && arc.endDate ? diffDaysKey(arc.endDate, arc.startDate) + 1 : 0;
+  const daysElapsed = phase === "active" ? clamp(diffDaysKey(today, arc.startDate) + 1, 1, totalDays) : phase === "complete" ? totalDays : 0;
+  const daysRemaining = phase === "active" ? clamp(diffDaysKey(arc.endDate, today), 0, totalDays) : 0;
+  const untilStart = phase === "upcoming" ? diffDaysKey(arc.startDate, today) : 0;
+  const progress = totalDays > 1 ? clamp(diffDaysKey(today, arc.startDate) / (totalDays - 1), 0, 1) : phase === "complete" ? 1 : 0;
+
+  const quote = QUOTES[dayOfYear(today) % QUOTES.length];
+  const doneCount = habitStats.filter((h) => isHabitDone(state.days, today, h.id)).length;
+  const quick = (state.days[today] && state.days[today].quick) || {};
+
+  return (
+    <div>
+      <div className="card hero">
+        <div className="hero-top">
+          <div>
+            <div className="eyebrow">{formatLong(today)}</div>
+            {phase === "upcoming" && <div className="hero-phase">Your arc hasn't started yet.</div>}
+            {phase === "complete" && <div className="hero-phase">This arc is finished — see how it went in Stats.</div>}
+          </div>
+        </div>
+        <ArcHero phase={phase} progress={progress} daysElapsed={daysElapsed} daysRemaining={daysRemaining} totalDays={totalDays} untilStart={untilStart} />
+      </div>
+
+      <div className="card quote-card" style={{ marginTop: 12 }}>
+        <span className="quote-mark">&ldquo;</span>
+        <p className="quote-text">{quote}</p>
+      </div>
+
+      <div className="section-head">
+        <h2>Today's habits</h2>
+        <span className="section-count mono">
+          {doneCount}/{habitStats.length}
+        </span>
+      </div>
+      <div className="habit-list">
+        {habitStats.length === 0 && (
+          <div className="card empty-note">No habits yet. Add some in Settings to start tracking.</div>
+        )}
+        {habitStats.map((h) => {
+          const done = isHabitDone(state.days, today, h.id);
+          return (
+            <button key={h.id} className="habit-row" data-done={done} onClick={() => onToggle(h.id)}>
+              <span className="habit-check">
+                <Icon name="check" size={14} />
+              </span>
+              <span className="habit-icon">{h.icon || h.name.slice(0, 1).toUpperCase()}</span>
+              <span className="habit-main">
+                <span className="habit-name">{h.name}</span>
+                <span className="habit-meta">Best streak {h.longest}d</span>
+              </span>
+              <span className="streak-badge" data-zero={h.current === 0}>
+                <Icon name="flame" size={13} />
+                {h.current}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="section-head">
+        <h2>Quick log</h2>
+        <span className="section-count">optional</span>
+      </div>
+      <div className="quicklog-grid">
+        <div className="ql-tile">
+          <span className="ql-tile-head">
+            <Icon name="dumbbell" size={13} /> Workout
+          </span>
+          <div className="workout-toggle">
+            <button data-on={quick.workout && quick.workout.done === true} onClick={() => onQuick({ workout: { ...quick.workout, done: true } })}>
+              Yes
+            </button>
+            <button data-on={quick.workout && quick.workout.done === false} onClick={() => onQuick({ workout: { ...quick.workout, done: false } })}>
+              No
+            </button>
+          </div>
+          {quick.workout && quick.workout.done && (
+            <input
+              className="ql-type-input"
+              placeholder="type — run, lift…"
+              value={(quick.workout && quick.workout.type) || ""}
+              onChange={(e) => onQuick({ workout: { ...quick.workout, type: e.target.value } })}
+            />
+          )}
+        </div>
+        <div className="ql-tile">
+          <span className="ql-tile-head">
+            <Icon name="footprints" size={13} /> Steps
+          </span>
+          <input type="number" min="0" placeholder="0" value={quick.steps ?? ""} onChange={(e) => onQuick({ steps: e.target.value === "" ? null : Number(e.target.value) })} />
+          <span className="ql-unit">steps</span>
+        </div>
+        <div className="ql-tile">
+          <span className="ql-tile-head">
+            <Icon name="droplet" size={13} /> Water
+          </span>
+          <input type="number" min="0" placeholder="0" value={quick.water ?? ""} onChange={(e) => onQuick({ water: e.target.value === "" ? null : Number(e.target.value) })} />
+          <span className="ql-unit">cups</span>
+        </div>
+        <div className="ql-tile">
+          <span className="ql-tile-head">
+            <Icon name="moon" size={13} /> Sleep
+          </span>
+          <input type="number" min="0" max="24" step="0.5" placeholder="0" value={quick.sleep ?? ""} onChange={(e) => onQuick({ sleep: e.target.value === "" ? null : Number(e.target.value) })} />
+          <span className="ql-unit">hours</span>
+        </div>
+      </div>
+
+      <div className="section-head">
+        <h2>Journal</h2>
+        <button className="btn btn-quiet btn-sm" onClick={goToJournal}>
+          Write today's entry <Icon name="chevron" size={13} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =============================== stats view ==================================== */
+
+function LineChart({ series }) {
+  const w = Math.max(560, series.length * 16);
+  const h = 160;
+  const padL = 30,
+    padR = 10,
+    padT = 14,
+    padB = 24;
+  const innerW = w - padL - padR;
+  const innerH = h - padT - padB;
+  const valid = series.filter((s) => s.pct !== null);
+  if (valid.length === 0) {
+    return <div className="empty-note">No data yet — check off a habit to start the chart.</div>;
+  }
+  const stepX = series.length > 1 ? innerW / (series.length - 1) : 0;
+  const yFor = (pct) => padT + innerH - (pct / 100) * innerH;
+  const points = series.map((s, i) => ({ x: padL + i * stepX, y: s.pct === null ? null : yFor(s.pct), pct: s.pct, date: s.date }));
+
+  const linePoints = points.filter((p) => p.y !== null);
+  const linePath = linePoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const areaPath = linePoints.length ? `${linePath} L ${linePoints[linePoints.length - 1].x.toFixed(1)} ${padT + innerH} L ${linePoints[0].x.toFixed(1)} ${padT + innerH} Z` : "";
+
+  const gridLines = [0, 25, 50, 75, 100];
+  const last = linePoints[linePoints.length - 1];
+
+  const labelEvery = Math.max(1, Math.round(series.length / 8));
+
+  return (
+    <div className="chart-scroll">
+      <svg className="chart-svg" width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+        {gridLines.map((g) => (
+          <line key={g} x1={padL} x2={w - padR} y1={yFor(g)} y2={yFor(g)} style={{ stroke: "var(--border)" }} strokeWidth="1" strokeDasharray={g === 0 ? "0" : "3 4"} />
+        ))}
+        {gridLines.map((g) => (
+          <text key={"t" + g} x={4} y={yFor(g) + 3} fontSize="9.5" style={{ fill: "var(--ink-faint)" }} fontFamily="IBM Plex Mono, monospace">
+            {g}
+          </text>
+        ))}
+        {areaPath && (
+          <path d={areaPath} style={{ fill: "var(--accent-soft)" }} opacity="0.7" />
+        )}
+        {linePath && <path d={linePath} fill="none" style={{ stroke: "var(--accent)" }} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />}
+        {last && <circle cx={last.x} cy={last.y} r="3.6" style={{ fill: "var(--accent)", stroke: "var(--surface)" }} strokeWidth="2" />}
+        {points.map((p, i) =>
+          i % labelEvery === 0 ? (
+            <text key={p.date} x={p.x} y={h - 6} fontSize="9.5" textAnchor="middle" style={{ fill: "var(--ink-faint)" }} fontFamily="IBM Plex Mono, monospace">
+              {formatShort(p.date)}
+            </text>
+          ) : null
+        )}
+      </svg>
+    </div>
+  );
+}
+
+function StatsView({ state, today, habitStats }) {
+  const { arc } = state;
+  const phase = arcPhase(arc.startDate, arc.endDate, today);
+  const seriesEnd = phase === "upcoming" ? null : today < arc.endDate ? today : arc.endDate;
+  const series = useMemo(() => dailySeries(state.days, state.habits, arc.startDate, seriesEnd), [state.days, state.habits, arc.startDate, seriesEnd]);
+
+  const totalDone = habitStats.reduce((a, h) => a + h.done, 0);
+  const totalPossible = habitStats.reduce((a, h) => a + h.total, 0);
+  const overallPct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
+  const bestOverall = habitStats.reduce((a, h) => Math.max(a, h.longest), 0);
+  const activeStreaks = habitStats.filter((h) => h.current > 0).length;
+
+  return (
+    <div>
+      <div className="section-head" style={{ marginTop: 0 }}>
+        <h2>Stats</h2>
+      </div>
+
+      <div className="stat-grid">
+        <div className="card stat-tile">
+          <span className="stat-value mono">{overallPct}%</span>
+          <span className="stat-label">Overall completion</span>
+        </div>
+        <div className="card stat-tile">
+          <span className="stat-value mono">{bestOverall}</span>
+          <span className="stat-label">Longest streak (days)</span>
+        </div>
+        <div className="card stat-tile">
+          <span className="stat-value mono">{activeStreaks}</span>
+          <span className="stat-label">Habits on a streak</span>
+        </div>
+        <div className="card stat-tile">
+          <span className="stat-value mono">{totalDone}</span>
+          <span className="stat-label">Total check-ins</span>
+        </div>
+      </div>
+
+      <div className="card chart-card" style={{ marginTop: 12 }}>
+        <div className="chart-head">
+          <h3 style={{ fontSize: 14 }}>Daily completion rate</h3>
+          <span className="section-count">{arc.startDate ? `${formatShort(arc.startDate)} – ${formatShort(seriesEnd || arc.endDate)}` : ""}</span>
+        </div>
+        <LineChart series={series} />
+      </div>
+
+      <div className="section-head">
+        <h2>Per habit</h2>
+      </div>
+      <div className="card">
+        {habitStats.length === 0 && <div className="empty-note">No habits yet.</div>}
+        {habitStats.map((h, i) => (
+          <Fragment key={h.id}>
+            {i > 0 && <hr className="divider" />}
+            <div className="habit-stat-row">
+              <span className="habit-stat-name">
+                <span className="habit-icon" style={{ width: 24, height: 24, fontSize: 11 }}>
+                  {h.icon || h.name.slice(0, 1).toUpperCase()}
+                </span>
+                {h.name}
+              </span>
+              <span className="habit-stat-bar-wrap">
+                <span className="habit-stat-bar" style={{ width: `${h.pct}%` }} />
+              </span>
+              <span className="habit-stat-pct mono">{h.pct}%</span>
+              <span className="habit-stat-best mono">best {h.longest}d</span>
+            </div>
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* =============================== journal view ==================================== */
+
+function JournalView({ state, today, habitStats, getDay, updateJournal, pushToast }) {
+  const [query, setQuery] = useState("");
+  const todayDay = getDay(today);
+  const [draft, setDraft] = useState(todayDay.journal.text || "");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setDraft(getDay(today).journal.text || "");
+    // eslint-disable-next-line
+  }, [today]);
+
+  const commit = (text) => {
+    setDraft(text);
+    updateJournal(today, { text });
+  };
+
+  const onPhoto = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setBusy(true);
+    try {
+      const dataUrl = await resizeImageFile(file);
+      const existing = getDay(today).journal.photos || [];
+      updateJournal(today, { photos: [...existing, dataUrl] });
+    } catch (err) {
+      pushToast("Couldn't read that photo.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removePhoto = (idx) => {
+    const existing = getDay(today).journal.photos || [];
+    updateJournal(today, { photos: existing.filter((_, i) => i !== idx) });
+  };
+
+  const entries = useMemo(() => {
+    const keys = Object.keys(state.days)
+      .filter((k) => {
+        const j = state.days[k].journal;
+        return j && (j.text || (j.photos && j.photos.length));
+      })
+      .sort((a, b) => (a < b ? 1 : -1));
+    const q = query.trim().toLowerCase();
+    return keys
+      .filter((k) => !q || k.includes(q) || (state.days[k].journal.text || "").toLowerCase().includes(q))
+      .map((k) => ({ date: k, ...state.days[k] }));
+  }, [state.days, query]);
+
+  const dayCompletion = (dateKey) => {
+    const active = state.habits.filter((h) => h.addedDate <= dateKey);
+    if (!active.length) return null;
+    const done = active.filter((h) => isHabitDone(state.days, dateKey, h.id)).length;
+    return `${done}/${active.length} habits`;
+  };
+
+  const currentPhotos = todayDay.journal.photos || [];
+
+  return (
+    <div>
+      <div className="section-head" style={{ marginTop: 0 }}>
+        <h2>Journal</h2>
+        <span className="section-count">{formatLong(today)}</span>
+      </div>
+
+      <div className="card composer">
+        <textarea placeholder="How did today go?" value={draft} onChange={(e) => commit(e.target.value)} />
+        <div className="composer-tools">
+          <label className="photo-input-label">
+            <Icon name="camera" size={14} />
+            {busy ? "Adding…" : "Add photo"}
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={onPhoto} disabled={busy} />
+          </label>
+          <span className="field-hint">Photos are resized and stored in this browser only.</span>
+        </div>
+        {currentPhotos.length > 0 && (
+          <div className="photo-preview-strip">
+            {currentPhotos.map((src, i) => (
+              <span key={i} style={{ position: "relative" }}>
+                <img className="photo-thumb" src={src} alt="" />
+                <button className="photo-remove" style={{ position: "absolute", top: -6, right: -6, background: "var(--surface)", borderRadius: 8, padding: "0 3px" }} onClick={() => removePhoto(i)}>
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="journal-search">
+        <input placeholder="Search past entries…" value={query} onChange={(e) => setQuery(e.target.value)} />
+      </div>
+
+      <div className="entry-list">
+        {entries.length === 0 && <div className="card empty-note">No entries match yet.</div>}
+        {entries.map((e) => (
+          <div className="card entry-card" key={e.date}>
+            <div className="entry-head">
+              <span className="entry-date">{formatMonthDayYear(e.date)}</span>
+              {dayCompletion(e.date) && <span className="entry-completion mono">{dayCompletion(e.date)}</span>}
+            </div>
+            {e.journal.text && <p className="entry-text">{e.journal.text}</p>}
+            {e.journal.photos && e.journal.photos.length > 0 && (
+              <div className="entry-photos">
+                {e.journal.photos.map((src, i) => (
+                  <img key={i} className="entry-photo" src={src} alt="" />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* =============================== reminders ==================================== */
+
+function ReminderWatcher({ state, today, habitStats, updateReminder }) {
+  useEffect(() => {
+    const tick = () => {
+      const { reminder } = state;
+      if (!reminder.enabled || !reminder.time) return;
+      if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+      const now = new Date();
+      const hhmm = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+      if (hhmm < reminder.time) return;
+      if (reminder.lastNotifiedDate === today) return;
+      const allDone = habitStats.length > 0 && habitStats.every((h) => isHabitDone(state.days, today, h.id));
+      if (allDone) return;
+      try {
+        new Notification("Winter Arc", { body: "Today's checklist is still open." });
+      } catch (e) {}
+      updateReminder({ lastNotifiedDate: today });
+    };
+    const id = setInterval(tick, 60000);
+    tick();
+    return () => clearInterval(id);
+    // eslint-disable-next-line
+  }, [state.reminder, state.days, today, habitStats.length]);
+  return null;
+}
+
+/* =============================== settings view ==================================== */
+
+function IconPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <button type="button" className="habit-editor-icon-btn" onClick={() => setOpen((o) => !o)}>
+        {value || "＋"}
+      </button>
+      {open && (
+        <div className="icon-picker" style={{ position: "absolute", zIndex: 30, top: 40, width: 220 }}>
+          {ICON_CHOICES.map((ic) => (
+            <button
+              type="button"
+              key={ic}
+              data-picked={value === ic}
+              onClick={() => {
+                onChange(ic);
+                setOpen(false);
+              }}
+            >
+              {ic}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HabitManager({ habits, addHabit, removeHabit, renameHabit }) {
+  const [name, setName] = useState("");
+  const [icon, setIcon] = useState(null);
+
+  const submit = () => {
+    if (!name.trim()) return;
+    addHabit(name, icon);
+    setName("");
+    setIcon(null);
+  };
+
+  return (
+    <div className="stack" style={{ gap: 10 }}>
+      {habits.map((h) => (
+        <div className="habit-editor-row" key={h.id}>
+          <IconPicker value={h.icon} onChange={(ic) => renameHabit(h.id, h.name, ic)} />
+          <input type="text" value={h.name} onChange={(e) => renameHabit(h.id, e.target.value, h.icon)} />
+          <button className="remove-habit-btn" onClick={() => removeHabit(h.id)} aria-label="Remove habit">
+            <Icon name="trash" size={16} />
+          </button>
+        </div>
+      ))}
+      <div className="add-habit-row">
+        <IconPicker value={icon} onChange={setIcon} />
+        <input type="text" placeholder="New habit name" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+        <button className="btn btn-primary btn-sm" onClick={submit}>
+          <Icon name="plus" size={14} /> Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SettingsView({ state, today, updateArc, addHabit, removeHabit, renameHabit, updateReminder, resetArc, exportJSON, downloads, pushToast }) {
+  const { arc, reminder } = state;
+  const [notifPerm, setNotifPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+
+  const requestNotif = async () => {
+    if (typeof Notification === "undefined") {
+      pushToast("Notifications aren't supported in this browser.");
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      setNotifPerm(perm);
+      if (perm === "granted") {
+        updateReminder({ enabled: true });
+        pushToast("Reminders enabled.");
+      } else {
+        pushToast("Notifications weren't allowed.");
+      }
+    } catch (e) {
+      pushToast("Couldn't request notification permission here.");
+    }
+  };
+
+  const icsText = useMemo(() => buildICSWithTime(arc, reminder.time || "20:00"), [arc.startDate, arc.endDate, reminder.time]);
+
+  const copyICS = async () => {
+    const ok = await copyToClipboard(icsText);
+    pushToast(ok ? "Calendar reminder copied — paste into a file named reminder.ics" : "Couldn't copy — select the text below manually.");
+  };
+  const downloadICS = async () => {
+    const res = await downloads.save("winter-arc-reminder.txt", icsText);
+    if (res.ok) pushToast("Saved — rename the file's extension to .ics, then open it to import.");
+    else pushToast("Couldn't save a file here — use Copy instead.");
+  };
+
+  const doReset = () => {
+    if (window.confirm("Reset the whole arc? This clears habits, check-ins, and journal entries.")) {
+      resetArc();
+    }
+  };
+
+  return (
+    <div>
+      <div className="section-head" style={{ marginTop: 0 }}>
+        <h2>Settings</h2>
+      </div>
+
+      <div className="card settings-section">
+        <h3>Your arc</h3>
+        <div className="date-range-row">
+          <div className="field">
+            <label>Start date</label>
+            <input type="date" value={arc.startDate || ""} onChange={(e) => updateArc({ startDate: e.target.value })} />
+          </div>
+          <div className="field">
+            <label>End date</label>
+            <input type="date" value={arc.endDate || ""} min={arc.startDate || undefined} onChange={(e) => updateArc({ endDate: e.target.value })} />
+          </div>
+        </div>
+        <div className="field">
+          <label>Why you're doing this</label>
+          <textarea value={arc.why || ""} onChange={(e) => updateArc({ why: e.target.value })} />
+        </div>
+      </div>
+
+      <div className="card settings-section">
+        <h3>Habits</h3>
+        <p className="desc">Add, rename, or remove the habits you track each day.</p>
+        <HabitManager habits={state.habits} addHabit={addHabit} removeHabit={removeHabit} renameHabit={renameHabit} />
+      </div>
+
+      <div className="card settings-section">
+        <h3>Reminders</h3>
+        <p className="desc">Get a browser notification if today's checklist is still open by this time.</p>
+        <div className="date-range-row">
+          <div className="field">
+            <label>Reminder time</label>
+            <input type="time" value={reminder.time} onChange={(e) => updateReminder({ time: e.target.value })} />
+          </div>
+          <div className="field">
+            <label>Browser notifications</label>
+            {notifPerm === "granted" ? (
+              <span className="pill pill-good" style={{ height: 38, alignItems: "center" }}>
+                Enabled
+              </span>
+            ) : (
+              <button className="btn btn-ghost" onClick={requestNotif}>
+                <Icon name="bell" size={14} /> Enable
+              </button>
+            )}
+          </div>
+        </div>
+        <p className="field-hint">Browser notifications only fire while this tab is open. For a reliable daily nudge, export the reminder to your calendar below.</p>
+        <div className="stack" style={{ gap: 8 }}>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn btn-ghost btn-sm" onClick={copyICS}>
+              <Icon name="copy" size={13} /> Copy calendar reminder
+            </button>
+            <button className="btn btn-quiet btn-sm" onClick={downloadICS}>
+              <Icon name="download" size={13} /> Download as file
+            </button>
+          </div>
+          <div className="ics-box mono">{icsText}</div>
+          <p className="field-hint">Save the copied text as <span className="mono">reminder.ics</span> and open it to add a daily recurring reminder to Apple Calendar or any calendar app.</p>
+        </div>
+      </div>
+
+      <div className="card settings-section">
+        <h3>Backup</h3>
+        <p className="desc">Everything lives only in this browser's local storage — it won't sync to another device. Export a backup regularly.</p>
+        <button className="btn btn-ghost" style={{ alignSelf: "flex-start" }} onClick={exportJSON}>
+          <Icon name="download" size={14} /> Export data as JSON
+        </button>
+      </div>
+
+      <div className="card settings-section">
+        <h3>Danger zone</h3>
+        <p className="desc">Clears your habits, check-ins, and journal, and starts onboarding over.</p>
+        <button className="btn btn-danger" style={{ alignSelf: "flex-start" }} onClick={doReset}>
+          <Icon name="trash" size={14} /> Reset arc
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =============================== onboarding ==================================== */
+
+function defaultRange() {
+  const start = todayKey();
+  const end = addDaysKey(start, 90);
+  return { start, end };
+}
+
+function Onboarding({ onComplete }) {
+  const [step, setStep] = useState(0);
+  const dr = defaultRange();
+  const [startDate, setStartDate] = useState(dr.start);
+  const [endDate, setEndDate] = useState(dr.end);
+  const [why, setWhy] = useState("");
+  const [habits, setHabits] = useState([
+    { id: uid(), name: "Cold shower", icon: "🚿" },
+    { id: uid(), name: "Read 10 pages", icon: "📖" },
+    { id: uid(), name: "Move my body", icon: "💪" },
+  ]);
+  const [newName, setNewName] = useState("");
+  const [newIcon, setNewIcon] = useState(null);
+
+  const addDraftHabit = () => {
+    if (!newName.trim()) return;
+    setHabits((h) => [...h, { id: uid(), name: newName.trim(), icon: newIcon }]);
+    setNewName("");
+    setNewIcon(null);
+  };
+  const removeDraftHabit = (id) => setHabits((h) => h.filter((x) => x.id !== id));
+
+  const totalDays = startDate && endDate ? Math.max(1, diffDaysKey(endDate, startDate) + 1) : 0;
+
+  const steps = ["Dates", "Why", "Habits"];
+
+  const canNext = step === 0 ? startDate && endDate && endDate >= startDate : step === 1 ? true : habits.length > 0;
+
+  return (
+    <div className="onboard-wrap">
+      <div className="card onboard-card">
+        <BrandMark size={34} />
+        <div className="onboard-steps">
+          {steps.map((s, i) => (
+            <span className="onboard-step-dot" key={s} data-active={i <= step} />
+          ))}
+        </div>
+
+        {step === 0 && (
+          <>
+            <h1 className="onboard-title">Set your arc</h1>
+            <p className="onboard-sub">Pick the stretch of the season you're committing to. A classic winter arc runs December through March.</p>
+            <div className="date-range-row">
+              <div className="field">
+                <label>Start date</label>
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+              <div className="field">
+                <label>End date</label>
+                <input type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+            </div>
+            {totalDays > 0 && <div className="range-preview mono">{totalDays} days total</div>}
+          </>
+        )}
+
+        {step === 1 && (
+          <>
+            <h1 className="onboard-title">What's this for?</h1>
+            <p className="onboard-sub">Write down the reason. You'll see it again whenever you need it.</p>
+            <div className="field">
+              <textarea autoFocus placeholder="I want to prove to myself that…" value={why} onChange={(e) => setWhy(e.target.value)} style={{ minHeight: 150 }} />
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <h1 className="onboard-title">Daily habits</h1>
+            <p className="onboard-sub">Add whatever you want to show up for, every day. You can change these any time in Settings.</p>
+            <div className="onboard-habit-list">
+              {habits.map((h) => (
+                <div className="habit-editor-row" key={h.id}>
+                  <span className="habit-editor-icon-btn" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {h.icon || h.name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <input type="text" value={h.name} onChange={(e) => setHabits((hs) => hs.map((x) => (x.id === h.id ? { ...x, name: e.target.value } : x)))} />
+                  <button className="remove-habit-btn" onClick={() => removeDraftHabit(h.id)} aria-label="Remove">
+                    <Icon name="x" size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="add-habit-row">
+              <IconPicker value={newIcon} onChange={setNewIcon} />
+              <input type="text" placeholder="Add a habit…" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addDraftHabit()} />
+              <button className="btn btn-quiet btn-sm" onClick={addDraftHabit}>
+                <Icon name="plus" size={14} />
+              </button>
+            </div>
+          </>
+        )}
+
+        <div className="onboard-actions">
+          {step > 0 ? (
+            <button className="btn btn-ghost btn-sm" onClick={() => setStep((s) => s - 1)}>
+              Back
+            </button>
+          ) : (
+            <span />
+          )}
+          {step < 2 ? (
+            <button className="btn btn-primary" disabled={!canNext} onClick={() => setStep((s) => s + 1)}>
+              Continue
+            </button>
+          ) : (
+            <button className="btn btn-primary" disabled={!canNext} onClick={() => onComplete({ startDate, endDate, why }, habits)}>
+              Start the arc
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =============================== mount ==================================== */
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+
+</script>
+</body>
+</html>
