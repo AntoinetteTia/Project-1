@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { AppDataApi } from "../lib/storage";
 import { genId, nowIso } from "../lib/storage";
+import StretchItemEditor from "../components/StretchItemEditor";
+import { emptyStretchItem, formatStretchAmount, type EditableStretchItem } from "../lib/stretchItem";
 import type { StretchRoutine } from "../lib/types";
 
 export default function Stretches({ data }: { data: AppDataApi }) {
@@ -76,16 +78,21 @@ export default function Stretches({ data }: { data: AppDataApi }) {
               {s.description && (
                 <p style={{ marginTop: "0.4rem" }}>{s.description}</p>
               )}
-              <div className="row-actions" style={{ marginTop: "0.3rem" }}>
-                {s.durationMinutes ? (
-                  <span className="pill pill-stretch">
-                    {s.durationMinutes} min
-                  </span>
-                ) : null}
-                {s.muscleGroup ? (
-                  <span className="pill pill-stretch">{s.muscleGroup}</span>
-                ) : null}
-              </div>
+              {s.muscleGroup && (
+                <span className="pill pill-stretch" style={{ marginBottom: "0.4rem" }}>
+                  {s.muscleGroup}
+                </span>
+              )}
+              {(s.items ?? []).length > 0 && (
+                <ul style={{ margin: "0.4rem 0 0", paddingLeft: "1.1rem" }}>
+                  {(s.items ?? []).map((item) => (
+                    <li key={item.id}>
+                      {item.name}
+                      {formatStretchAmount(item) && ` — ${formatStretchAmount(item)}`}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </div>
@@ -113,10 +120,17 @@ function StretchModal({
 }) {
   const [name, setName] = useState(routine?.name ?? "");
   const [description, setDescription] = useState(routine?.description ?? "");
-  const [durationMinutes, setDurationMinutes] = useState(
-    routine?.durationMinutes ? String(routine.durationMinutes) : "",
-  );
   const [muscleGroup, setMuscleGroup] = useState(routine?.muscleGroup ?? "");
+  const [items, setItems] = useState<EditableStretchItem[]>(
+    routine?.items && routine.items.length > 0
+      ? routine.items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          reps: i.reps ?? 0,
+          durationSeconds: i.durationSeconds ?? 0,
+        }))
+      : [emptyStretchItem()],
+  );
 
   function submit() {
     const cleanName = name.trim();
@@ -124,13 +138,22 @@ function StretchModal({
       window.alert("Give the routine a name.");
       return;
     }
+    const cleanItems = items
+      .map((item) => ({ ...item, name: item.name.trim() }))
+      .filter((item) => item.name.length > 0)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        reps: item.reps || undefined,
+        durationSeconds: item.durationSeconds || undefined,
+      }));
     const now = nowIso();
     onSave({
       id: routine?.id ?? genId(),
       name: cleanName,
       description: description.trim() || undefined,
-      durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
       muscleGroup: muscleGroup.trim() || undefined,
+      items: cleanItems,
       createdAt: routine?.createdAt ?? now,
       updatedAt: now,
     });
@@ -150,36 +173,27 @@ function StretchModal({
           />
         </div>
         <div className="field">
-          <label htmlFor="stretch-desc">Description</label>
+          <label>Stretches / moves</label>
+          <StretchItemEditor items={items} onChange={setItems} />
+        </div>
+        <div className="field">
+          <label htmlFor="stretch-desc">Notes (optional)</label>
           <textarea
             id="stretch-desc"
             rows={2}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Band pull-aparts, arm circles, cat-cow..."
+            placeholder="Any extra cues for this routine..."
           />
         </div>
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="stretch-duration">Duration (min)</label>
-            <input
-              id="stretch-duration"
-              type="number"
-              min={0}
-              inputMode="numeric"
-              value={durationMinutes}
-              onChange={(e) => setDurationMinutes(e.target.value)}
-            />
-          </div>
-          <div className="field" style={{ gridColumn: "span 2" }}>
-            <label htmlFor="stretch-muscle">Target muscle group</label>
-            <input
-              id="stretch-muscle"
-              placeholder="e.g. Shoulders"
-              value={muscleGroup}
-              onChange={(e) => setMuscleGroup(e.target.value)}
-            />
-          </div>
+        <div className="field">
+          <label htmlFor="stretch-muscle">Target muscle group (optional)</label>
+          <input
+            id="stretch-muscle"
+            placeholder="e.g. Shoulders"
+            value={muscleGroup}
+            onChange={(e) => setMuscleGroup(e.target.value)}
+          />
         </div>
         <div className="row" style={{ gap: "0.6rem" }}>
           <button type="button" className="btn btn-block" onClick={onCancel}>

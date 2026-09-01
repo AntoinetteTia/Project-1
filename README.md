@@ -15,8 +15,9 @@ everything is saved to your browser's `localStorage`.
 - **Templates** — reusable routines (e.g. "Push Day") with a saved exercise
   list and an optional attached warm-up/stretch routine.
 - **Stretches & Warm-ups** — a visually distinct section for creating and
-  managing warm-up/stretch routines (name, description, duration, target
-  muscle group) independently of any template.
+  managing warm-up/stretch routines, each a list of individual stretches
+  with a name and reps and/or a hold duration (just like exercises),
+  independently of any template.
 - **Dashboard** — workouts this week, most-logged exercises, and recent
   activity at a glance.
 - **Backup** — export all data as JSON or CSV, and re-import a JSON backup.
