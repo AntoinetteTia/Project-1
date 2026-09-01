@@ -334,6 +334,14 @@ button {
   font-size: 0.7rem;
 }
 
+.stretch-item-row {
+  display: grid;
+  grid-template-columns: 1fr 56px 56px auto;
+  gap: 0.4rem;
+  align-items: end;
+  margin-bottom: 0.6rem;
+}
+
 .icon-btn {
   background: none;
   border: none;

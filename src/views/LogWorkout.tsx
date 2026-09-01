@@ -3,6 +3,7 @@ import type { AppDataApi } from "../lib/storage";
 import { genId, nowIso, todayStr } from "../lib/storage";
 import ExerciseEditor from "../components/ExerciseEditor";
 import { emptyExercise, type EditableExercise } from "../lib/exercise";
+import { formatStretchAmount } from "../lib/stretchItem";
 import type { WorkoutEntry } from "../lib/types";
 
 export default function LogWorkout({
@@ -120,11 +121,21 @@ export default function LogWorkout({
           <span className="pill pill-stretch">Warm-up</span>
           <h3 style={{ marginTop: "0.4rem" }}>{warmup.name}</h3>
           {warmup.description && <p style={{ margin: 0 }}>{warmup.description}</p>}
-          <p className="muted" style={{ margin: "0.3rem 0 0" }}>
-            {warmup.durationMinutes ? `${warmup.durationMinutes} min` : ""}
-            {warmup.durationMinutes && warmup.muscleGroup ? " · " : ""}
-            {warmup.muscleGroup ?? ""}
-          </p>
+          {warmup.muscleGroup && (
+            <p className="muted" style={{ margin: "0.2rem 0 0" }}>
+              {warmup.muscleGroup}
+            </p>
+          )}
+          {(warmup.items ?? []).length > 0 && (
+            <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.1rem" }}>
+              {(warmup.items ?? []).map((item) => (
+                <li key={item.id}>
+                  {item.name}
+                  {formatStretchAmount(item) && ` — ${formatStretchAmount(item)}`}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

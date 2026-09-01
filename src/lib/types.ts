@@ -42,12 +42,19 @@ export interface WorkoutTemplate {
   updatedAt: string;
 }
 
+export interface StretchItem {
+  id: string;
+  name: string;
+  reps?: number;
+  durationSeconds?: number;
+}
+
 export interface StretchRoutine {
   id: string;
   name: string;
   description?: string;
-  durationMinutes?: number;
   muscleGroup?: string;
+  items: StretchItem[];
   createdAt: string;
   updatedAt: string;
 }
