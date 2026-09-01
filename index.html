@@ -1746,7 +1746,7 @@ function TodayView({ state, today, habitStats, onToggle, onQuick, goToJournal })
             <Icon name="droplet" size={13} /> Water
           </span>
           <input type="number" min="0" placeholder="0" value={quick.water ?? ""} onChange={(e) => onQuick({ water: e.target.value === "" ? null : Number(e.target.value) })} />
-          <span className="ql-unit">cups</span>
+          <span className="ql-unit">oz</span>
         </div>
         <div className="ql-tile">
           <span className="ql-tile-head">
